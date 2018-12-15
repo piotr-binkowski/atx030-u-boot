@@ -5,6 +5,9 @@ config SYS_ARCH
 	default "m68k"
 
 # processor family
+config MC680x0
+	bool
+
 config MCF520x
 	bool
 
@@ -39,6 +42,10 @@ config MCF547x_8x
 	bool
 
 # processor type
+config MC68030
+	bool
+	select MC680x0
+
 config M5208
 	bool
 	select MCF520x

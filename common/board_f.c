@@ -559,7 +559,7 @@ static int setup_board_part1(void)
 #if defined(CONFIG_E500) || defined(CONFIG_MPC86xx)
 	bd->bi_immr_base = CONFIG_SYS_IMMR;	/* base  of IMMR register     */
 #endif
-#if defined(CONFIG_M68K)
+#if defined(CONFIG_M68K) && !defined(CONFIG_MC680x0)
 	bd->bi_mbar_base = CONFIG_SYS_MBAR;	/* base of internal registers */
 #endif
 #if defined(CONFIG_MPC83xx)

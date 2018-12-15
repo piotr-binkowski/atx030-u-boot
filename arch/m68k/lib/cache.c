@@ -32,6 +32,7 @@ void icache_enable(void)
 
 	*cf_icache_status = 1;
 
+#if !defined(CONFIG_MC680x0)
 #if defined(CONFIG_CF_V4) || defined(CONFIG_CF_V4E)
 	__asm__ __volatile__("movec %0, %%acr2"::"r"(CONFIG_SYS_CACHE_ACR2));
 	__asm__ __volatile__("movec %0, %%acr3"::"r"(CONFIG_SYS_CACHE_ACR3));
@@ -45,6 +46,12 @@ void icache_enable(void)
 #endif
 
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(CONFIG_SYS_CACHE_ICACR));
+#else
+	ulong cacr;
+	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
+	cacr |= 0x0001;
+	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
+#endif
 }
 
 void icache_disable(void)
@@ -52,6 +59,8 @@ void icache_disable(void)
 	u32 temp = 0;
 
 	*cf_icache_status = 0;
+
+#if !defined(CONFIG_MC680x0)
 	icache_invalid();
 
 #if defined(CONFIG_CF_V4) || defined(CONFIG_CF_V4E)
@@ -65,10 +74,19 @@ void icache_disable(void)
 	__asm__ __volatile__("movec %0, %%acr0"::"r"(temp));
 	__asm__ __volatile__("movec %0, %%acr1"::"r"(temp));
 #endif
+#else
+	ulong cacr;
+	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
+	cacr &= ~0x0001;
+	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
+
+	icache_invalid();
+#endif
 }
 
 void icache_invalid(void)
 {
+#if !defined(CONFIG_MC680x0)
 	u32 temp;
 
 	temp = CONFIG_SYS_ICACHE_INV;
@@ -76,6 +94,12 @@ void icache_invalid(void)
 		temp |= CONFIG_SYS_CACHE_ICACR;
 
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(temp));
+#else
+	ulong cacr;
+	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
+	cacr |= 0x0008;
+	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
+#endif
 }
 
 /*
@@ -87,6 +111,7 @@ void dcache_enable(void)
 	dcache_invalid();
 	*cf_dcache_status = 1;
 
+#if !defined(CONFIG_MC680x0)
 #if defined(CONFIG_CF_V4) || defined(CONFIG_CF_V4E)
 	__asm__ __volatile__("movec %0, %%acr0"::"r"(CONFIG_SYS_CACHE_ACR0));
 	__asm__ __volatile__("movec %0, %%acr1"::"r"(CONFIG_SYS_CACHE_ACR1));
@@ -97,6 +122,12 @@ void dcache_enable(void)
 #endif
 
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(CONFIG_SYS_CACHE_DCACR));
+#else
+	ulong cacr;
+	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
+	cacr |= 0x0100;
+	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
+#endif
 }
 
 void dcache_disable(void)
@@ -104,6 +135,7 @@ void dcache_disable(void)
 	u32 temp = 0;
 
 	*cf_dcache_status = 0;
+#if !defined(CONFIG_MC680x0)
 	dcache_invalid();
 
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(temp));
@@ -116,10 +148,18 @@ void dcache_disable(void)
 	__asm__ __volatile__("movec %0, %%acr5"::"r"(temp));
 #endif
 #endif
+#else
+	ulong cacr;
+	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
+	cacr &= ~0x0100;
+	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
+	dcache_invalid();
+#endif
 }
 
 void dcache_invalid(void)
 {
+#if !defined(CONFIG_MC680x0)
 #if defined(CONFIG_CF_V4) || defined(CONFIG_CF_V4E)
 	u32 temp;
 
@@ -130,6 +170,12 @@ void dcache_invalid(void)
 		temp |= CONFIG_SYS_CACHE_ICACR;
 
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(temp));
+#endif
+#else
+	ulong cacr;
+	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
+	cacr |= 0x0800;
+	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
 #endif
 }
 
