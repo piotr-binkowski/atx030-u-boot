@@ -50,6 +50,7 @@
 #define SST39LF040	0x00D7
 #define SST39SF010A	0x00B5
 #define SST39SF020A	0x00B6
+#define SST39SF040A	0x00B7
 
 /* STM */
 #define STM29F400BB	0x00D6
@@ -198,6 +199,20 @@ static const struct amd_flash_info jedec_table[] = {
 		.mfr_id		= (u16)SST_MANUFACT,
 		.dev_id		= SST39LF040,
 		.name		= "SST 39LF040",
+		.uaddr		= {
+			[0] = MTD_UADDR_0x5555_0x2AAA /* x8 */
+		},
+		.DevSize	= SIZE_512KiB,
+		.CmdSet		= P_ID_AMD_STD,
+		.NumEraseRegions= 1,
+		.regions	= {
+			ERASEINFO(0x01000,128),
+		}
+	},
+	{
+		.mfr_id		= (u16)SST_MANUFACT,
+		.dev_id		= SST39SF040A,
+		.name		= "SST 39SF040",
 		.uaddr		= {
 			[0] = MTD_UADDR_0x5555_0x2AAA /* x8 */
 		},
