@@ -472,4 +472,9 @@ config TSEC_ENET
 	  This driver implements support for the (Enhanced) Three-Speed
 	  Ethernet Controller found on Freescale SoCs.
 
+config ENC28J60
+	bool "enc28j60 driver"
+	help
+		enc28j60 driver.
+
 endif # NETDEVICES
