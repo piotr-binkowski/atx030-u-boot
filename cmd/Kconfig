@@ -248,6 +248,11 @@ config CMD_BOOTEFI_HELLO
 
 source lib/efi_selftest/Kconfig
 
+config CMD_BOOT68
+	bool "boot68"
+	help
+	  Boot m68k Linux kernel binaries
+
 config CMD_BOOTMENU
 	bool "bootmenu"
 	select MENU

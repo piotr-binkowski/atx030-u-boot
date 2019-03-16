@@ -498,6 +498,8 @@ static int bootm_load_os(bootm_headers_t *images, int boot_progress)
 		}
 	}
 
+	images->os.load_end = load_end;
+
 	lmb_reserve(&images->lmb, images->os.load, (load_end -
 						    images->os.load));
 	return 0;

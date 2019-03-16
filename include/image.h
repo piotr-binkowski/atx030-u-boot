@@ -327,7 +327,7 @@ typedef struct image_header {
 typedef struct image_info {
 	ulong		start, end;		/* start/end of blob */
 	ulong		image_start, image_len; /* start of image within blob, len of image */
-	ulong		load;			/* load addr for the image */
+	ulong		load, load_end;		/* load addr for the image */
 	uint8_t		comp, type, os;		/* compression, type of image, os type */
 	uint8_t		arch;			/* CPU architecture */
 } image_info_t;
