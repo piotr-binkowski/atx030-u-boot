@@ -273,6 +273,11 @@ config SOFT_SPI
 	 Enable Soft SPI driver. This driver is to use GPIO simulate
 	 the SPI protocol.
 
+config ATX030_SPI
+	bool "ATX030 SPI driver"
+	help
+	  Enable the ATX030-IO SPI driver.
+
 config CF_SPI
 	bool "ColdFire SPI driver"
 	help
