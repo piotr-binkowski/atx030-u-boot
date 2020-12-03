@@ -118,6 +118,7 @@ U_BOOT_ENV_CALLBACK(baudrate, on_baudrate);
 
 serial_initfunc(atmel_serial_initialize);
 serial_initfunc(mcf_serial_initialize);
+serial_initfunc(ft245_serial_initialize);
 serial_initfunc(mpc85xx_serial_initialize);
 serial_initfunc(mpc8xx_serial_initialize);
 serial_initfunc(mxc_serial_initialize);
