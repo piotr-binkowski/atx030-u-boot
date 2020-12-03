@@ -20,6 +20,39 @@ static volatile ulong timestamp = 0;
 #define CONFIG_SYS_WATCHDOG_FREQ (CONFIG_SYS_HZ / 2)
 #endif
 
+#if defined(CONFIG_ATX030_TIM)
+
+void __udelay(unsigned long usec)
+{
+	if(usec < 1000) {
+		return;
+	} else {
+		ulong base = timestamp;
+		ulong val  = (usec < 10000) ? 10 : (usec / 1000);
+		while(get_timer(base) < val);
+	}
+}
+
+void tim_interrupt(void *not_used)
+{
+	timestamp += 10;
+}
+
+int timer_init(void)
+{
+	timestamp = 0;
+
+	irq_install_handler(CONFIG_SYS_ATX030_TIM_IRQ, tim_interrupt, 0);
+
+	return 0;
+}
+
+ulong get_timer(ulong base)
+{
+	return (timestamp - base);
+}
+
+#endif
 #if defined(CONFIG_MCFTMR)
 #ifndef CONFIG_SYS_UDELAY_BASE
 #	error	"uDelay base not defined!"
