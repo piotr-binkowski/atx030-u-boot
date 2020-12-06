@@ -94,12 +94,69 @@ static int spi_check_done(struct atx030_spi *ss)
 	return readb(ss->base + SPI_SR) & SPI_DONE;
 }
 
+static void spi_rx(struct atx030_spi *ss, unsigned int len, u8 *rxd)
+{
+	void * const base = ss->base;
+	for(len; len > 0; len--) {
+		u16 tx = 0xffff;
+
+		writew(tx, base + SPI_DRW);
+
+		while(!spi_check_done(ss));
+
+		*((u16*)rxd) = readw(base + SPI_DRW);
+		rxd += 2;
+	}
+}
+
+static void spi_tx(struct atx030_spi *ss, unsigned int len, const u8 *txd)
+{
+	void * const base = ss->base;
+	for(len; len > 0; len--) {
+		u16 tx = *(u16*)txd;
+		txd += 2;
+
+		writew(tx, base + SPI_DRW);
+
+		while(!spi_check_done(ss));
+	}
+}
+
+static void spi_txrx(struct atx030_spi *ss, unsigned int len, u8 *rxd, const u8 *txd)
+{
+	void * const base = ss->base;
+	for(len; len > 0; len--) {
+		u16 tx = *(u16*)txd;
+		txd += 2;
+
+		writew(tx, base + SPI_DRW);
+
+		while(!spi_check_done(ss));
+
+		*((u16*)rxd) = readw(base + SPI_DRW);
+		rxd += 2;
+	}
+}
+
+static void spi_dummy(struct atx030_spi *ss, unsigned int len)
+{
+	void * const base = ss->base;
+	for(len; len > 0; len--) {
+		u16 tx = 0xffff;
+
+		writew(tx, base + SPI_DRW);
+
+		while(!spi_check_done(ss));
+	}
+}
+
 int spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 		const void *dout, void *din, unsigned long flags)
 {
 	struct atx030_spi *ss = to_atx030_spi(slave);
+	void * const base = ss->base;
 	const u8 *txd = dout;
-	unsigned bytes;
+	unsigned int bytes;
 	u8 *rxd = din;
 
 	if(bitlen % 8)
@@ -108,35 +165,37 @@ int spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 	if (flags & SPI_XFER_BEGIN)
 		spi_cs_activate(slave);
 
-	for(bytes = bitlen / 8; bytes > 1; bytes-=2) {
-		u16 tx;
+	bytes = bitlen / 8;
 
-		if(txd) {
-			tx = *((u16*)txd);
-			txd += 2;
-		} else {
-			tx = 0xffff;
-		}
+	if (bytes > 1) {
+		if(txd && rxd)
+			spi_txrx(ss, bytes / 2, rxd, txd);
+		else if (txd)
+			spi_tx(ss, bytes / 2, txd);
+		else if (rxd)
+			spi_rx(ss, bytes / 2, rxd);
+		else
+			spi_dummy(ss, bytes / 2);
 
-		writew(tx, ss->base + SPI_DRW);
+		if (txd)
+			txd += (bytes / 2) * 2;
 
-		while(!spi_check_done(ss));
+		if (rxd)
+			rxd += (bytes / 2) * 2;
 
-		if(rxd) {
-			*((u16*)rxd) = readw(ss->base + SPI_DRW);
-			rxd += 2;
-		}
+		bytes = bytes % 2;
 	}
+
 
 	if (bytes) {
 		u8 tx = txd ? *txd : 0xff;
 
-		writeb(tx, ss->base + SPI_DRWB);
+		writeb(tx, base + SPI_DRWB);
 
 		while(!spi_check_done(ss));
 
 		if(rxd)
-			*rxd++ = readb(ss->base + SPI_DRRB);
+			*rxd++ = readb(base + SPI_DRRB);
 	}
 
 	if (flags & SPI_XFER_END)
