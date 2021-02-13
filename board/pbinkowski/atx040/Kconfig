@@ -1,0 +1,15 @@
+if TARGET_ATX040
+
+config SYS_CPU
+	default "mc680x0"
+
+config SYS_BOARD
+	default "atx040"
+
+config SYS_VENDOR
+	default "pbinkowski"
+
+config SYS_CONFIG_NAME
+	default "ATX040"
+
+endif

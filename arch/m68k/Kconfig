@@ -46,6 +46,10 @@ config MC68030
 	bool
 	select MC680x0
 
+config MC68040
+	bool
+	select MC680x0
+
 config M5208
 	bool
 	select MCF520x
@@ -126,6 +130,10 @@ choice
 config TARGET_ATX030
 	bool "Support ATX030"
 	select MC68030
+
+config TARGET_ATX040
+	bool "Support ATX040"
+	select MC68040
 
 config TARGET_M52277EVB
 	bool "Support M52277EVB"
@@ -235,5 +243,6 @@ source "board/freescale/m548xevb/Kconfig"
 source "board/sysam/amcore/Kconfig"
 source "board/sysam/stmark2/Kconfig"
 source "board/pbinkowski/atx030/Kconfig"
+source "board/pbinkowski/atx040/Kconfig"
 
 endmenu

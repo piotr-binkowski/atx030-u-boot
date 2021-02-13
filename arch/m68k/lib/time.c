@@ -8,6 +8,7 @@
 
 #include <common.h>
 
+#include <asm/io.h>
 #include <asm/timer.h>
 #include <asm/immap.h>
 #include <watchdog.h>
@@ -18,6 +19,43 @@ static volatile ulong timestamp = 0;
 
 #ifndef CONFIG_SYS_WATCHDOG_FREQ
 #define CONFIG_SYS_WATCHDOG_FREQ (CONFIG_SYS_HZ / 2)
+#endif
+
+#if defined(CONFIG_WB_TIM)
+
+#define WB_TIM_LO	0x0
+#define WB_TIM_HI	0x4
+
+uint64_t read_wb_tim(void)
+{
+	uint32_t tmp1, tmp2, tmp3;
+
+	do {
+		tmp1 = readl(CONFIG_SYS_WB_TIM_BASE + WB_TIM_HI);
+		tmp2 = readl(CONFIG_SYS_WB_TIM_BASE + WB_TIM_LO);
+		tmp3 = readl(CONFIG_SYS_WB_TIM_BASE + WB_TIM_HI);
+	} while (tmp1 != tmp3);
+
+	return ((uint64_t)tmp1 << 32) | tmp2;
+}
+
+void __udelay(unsigned long usec)
+{
+	unsigned long long target = read_wb_tim() + ((unsigned long long)usec * 100);
+
+	while(read_wb_tim() < target);
+}
+
+int timer_init(void)
+{
+	return 0;
+}
+
+ulong get_timer(ulong base)
+{
+	return (read_wb_tim() / 100000) - base;
+}
+
 #endif
 
 #if defined(CONFIG_ATX030_TIM)

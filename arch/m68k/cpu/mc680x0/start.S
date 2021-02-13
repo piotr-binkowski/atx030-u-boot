@@ -38,7 +38,7 @@ _vectors:
 .long	0x00000000		/* Flash offset is 0 until we setup CS0 */
 #if (defined(CONFIG_M5282) && (CONFIG_SYS_TEXT_BASE == CONFIG_SYS_INT_FLASH_BASE))
 .long	_start - CONFIG_SYS_TEXT_BASE
-#elif (defined(CONFIG_MC680x0))
+#elif (defined(CONFIG_ATX030))
 .long	(_start - CONFIG_SYS_TEXT_BASE) + CONFIG_SYS_FLASH_BASE
 #else
 .long	_START
@@ -90,6 +90,8 @@ _start:
 	nop
 	move.w	#0x2700,%sr
 
+#if defined(CONFIG_ATX030)
+
 	move.l #CONFIG_SYS_TEXT_BASE, %a0
 	move.l #__init_end, %a1
 	move.l #CONFIG_SYS_FLASH_BASE, %a2
@@ -100,6 +102,8 @@ _start:
 	move.l #2f, %a0
 	jmp.l (%a0)
 2:
+
+#endif
 	/*
 	 * if we come from a pre-loader we have no exception table and
 	 * therefore no VBR to set
@@ -124,6 +128,8 @@ _start:
 	/* setup stack initially on top of internal static ram  */
 	move.l	#(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_RAM_SIZE), %sp
 
+#if defined(CONFIG_ATX030)
+
 	/* configure transparent translation */
 	move.l #0xE01F8707, %d0
 	move.l %d0, -(%sp)
@@ -133,6 +139,23 @@ _start:
 	/* enable bursts and write allocate mode */
 	move.l #0x3010, %d0
 	movec %d0, %cacr
+
+#else
+
+	/* transparent translation */
+	move.l #0xC03FC040, %d0
+	movec.l %d0, %dtt0
+	movec.l %d0, %itt0
+
+	/* enable cache */
+	nop
+	cinva %bc
+	nop
+
+	move.l #0x80008000, %d0
+	movec.l %d0, %cacr
+
+#endif
 
 	/*
 	 * if configured, malloc_f arena will be reserved first,

@@ -278,6 +278,11 @@ config ATX030_SPI
 	help
 	  Enable the ATX030-IO SPI driver.
 
+config WB_SPI
+	bool "WB SPI driver"
+	help
+	  Enable the WB SPI driver.
+
 config CF_SPI
 	bool "ColdFire SPI driver"
 	help
