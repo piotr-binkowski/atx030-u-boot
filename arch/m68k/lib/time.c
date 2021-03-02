@@ -46,8 +46,15 @@ void __udelay(unsigned long usec)
 	while(read_wb_tim() < target);
 }
 
+void tim_interrupt(void *not_used)
+{
+	timestamp += 10;
+}
+
 int timer_init(void)
 {
+	irq_install_handler(CONFIG_SYS_WB_TIM_IRQ, tim_interrupt, 0);
+
 	return 0;
 }
 

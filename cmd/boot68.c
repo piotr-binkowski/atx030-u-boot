@@ -10,10 +10,10 @@
 #define BI_MEMCHUNK	5
 #define BI_RAMDISK	6
 #define BI_COMMAND	7
-#define MACHTYPE	15
-#define CPUTYPE		2
-#define MMUTYPE		2
-#define FPUTYPE		2
+#define MACHTYPE	16
+#define CPUTYPE		4
+#define MMUTYPE		4
+#define FPUTYPE		4
 
 DECLARE_GLOBAL_DATA_PTR;
 

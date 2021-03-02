@@ -41,11 +41,11 @@
 
 #define CONFIG_WB_UART
 #define CONFIG_SYS_WB_UART_BASE		0xC0000000
-#define CONFIG_SYS_WB_UART_IRQ		26
+#define CONFIG_SYS_WB_UART_IRQ		25
 
 #define CONFIG_WB_TIM
 #define CONFIG_SYS_WB_TIM_BASE		0xC8000000
-#define CONFIG_SYS_WB_TIM_IRQ		25
+#define CONFIG_SYS_WB_TIM_IRQ		26
 
 #ifdef CONFIG_MMC
 # define CONFIG_MMC_SPI
@@ -57,10 +57,12 @@
 #define CONFIG_SYS_MEMTEST_END		0x01800000
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	"kernel_addr=100000\0" \
-	"initrd_addr=800000\0" \
+	"kernel_addr=800000\0" \
+	"initrd_addr=1000000\0" \
 	"uboot_off=80000\0" \
 	"uboot_size=40000\0" \
+	"net_args=root=/dev/ram0 console=ttyS0\0" \
+	"netboot=dhcp $kernel_addr /linux.u && dhcp $initrd_addr /rootfs.u && setenv bootargs \"$net_args\" && boot68 $kernel_addr $initrd_addr\0" \
 	"update=mw.b $kernel_addr ff $uboot_size && " \
 	"loadb $kernel_addr && " \
 	"sf probe 0 && " \

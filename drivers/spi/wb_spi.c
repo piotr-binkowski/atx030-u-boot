@@ -11,7 +11,7 @@
 #define SPI_STATUS	0x4
 
 #define SPI_SS		0x1
-#define SPI_BUSY	0x2
+#define SPI_RX_EMPTY	0x2
 
 struct wb_spi {
 	struct spi_slave slave;
@@ -97,11 +97,6 @@ void spi_cs_deactivate(struct spi_slave *slave)
 	writeb(1, ss->base + SPI_STATUS);
 }
 
-static int spi_check_done(struct wb_spi *ss)
-{
-	return !(readb(ss->base + SPI_STATUS) & SPI_BUSY);
-}
-
 int spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 		const void *dout, void *din, unsigned long flags)
 {
@@ -117,17 +112,18 @@ int spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 	if (flags & SPI_XFER_BEGIN)
 		spi_cs_activate(slave);
 
-	bytes = bitlen / 8;
+	//printf("spi_xfer len: %d, txd: %p, rxd: %p\n", bitlen / 8, txd, rxd);
 
-	for(bytes; bytes > 0; bytes--) {
-		u8 tx = txd ? *(txd++) : 0xff;
+	for(bytes = bitlen / 8; bytes > 0; bytes--) {
+		u8 tmp = txd ? *(txd++) : 0xff;
 
-		writeb(tx, base + SPI_DATA);
+		writeb(tmp, base + SPI_DATA);
 
-		while(!spi_check_done(ss));
+		while(readb(base + SPI_STATUS) & SPI_RX_EMPTY);
 
+		tmp = readb(base + SPI_DATA);
 		if(rxd)
-			*rxd++ = readb(base + SPI_DATA);
+			*rxd++ = tmp;
 	}
 
 	if (flags & SPI_XFER_END)
