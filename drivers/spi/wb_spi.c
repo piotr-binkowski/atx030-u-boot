@@ -7,11 +7,13 @@
 #define SPI1_BASE	0xCC000000
 #define SPI2_BASE	0xD0000000
 
-#define SPI_DATA	0x0
-#define SPI_STATUS	0x4
+#define WB_SPI_DATA	0x0
+#define WB_SPI_STATUS	0x4
 
-#define SPI_SS		0x1
-#define SPI_RX_EMPTY	0x2
+#define WB_SPI_SS	0x1
+#define WB_SPI_RX_EMPTY	0x2
+#define WB_SPI_TX_FULL	0x04
+#define WB_SPI_FIFO_DEPTH 1024
 
 struct wb_spi {
 	struct spi_slave slave;
@@ -88,23 +90,25 @@ void spi_release_bus(struct spi_slave *slave)
 void spi_cs_activate(struct spi_slave *slave)
 {
 	struct wb_spi *ss = to_wb_spi(slave);
-	writeb(0, ss->base + SPI_STATUS);
+	writeb(0, ss->base + WB_SPI_STATUS);
 }
 
 void spi_cs_deactivate(struct spi_slave *slave)
 {
 	struct wb_spi *ss = to_wb_spi(slave);
-	writeb(1, ss->base + SPI_STATUS);
+	writeb(1, ss->base + WB_SPI_STATUS);
 }
 
 int spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 		const void *dout, void *din, unsigned long flags)
 {
 	struct wb_spi *ss = to_wb_spi(slave);
-	void * const base = ss->base;
+	void *base = ss->base;
 	const u8 *txd = dout;
-	unsigned int bytes;
 	u8 *rxd = din;
+	u8 tmp = 0xff;
+	u32 len;
+	u16 i;
 
 	if(bitlen % 8)
 		return -1;
@@ -112,22 +116,24 @@ int spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 	if (flags & SPI_XFER_BEGIN)
 		spi_cs_activate(slave);
 
-	//printf("spi_xfer len: %d, txd: %p, rxd: %p\n", bitlen / 8, txd, rxd);
-
-	for(bytes = bitlen / 8; bytes > 0; bytes--) {
-		u8 tmp = txd ? *(txd++) : 0xff;
-
-		writeb(tmp, base + SPI_DATA);
-
-		while(readb(base + SPI_STATUS) & SPI_RX_EMPTY);
-
-		tmp = readb(base + SPI_DATA);
-		if(rxd)
-			*rxd++ = tmp;
+	for(len = bitlen / 8; len > 0;) {
+		const u16 tgt_len = (len > WB_SPI_FIFO_DEPTH) ? WB_SPI_FIFO_DEPTH : len;
+		u8 tmp = 0;
+		for(i = 0; i < tgt_len; i++) {
+			tmp = txd ? *(txd++) : tmp;
+			writeb(tmp, base + WB_SPI_DATA);
+		}
+		for(i = 0; i < tgt_len; i++) {
+			while(readb(base + WB_SPI_STATUS) & WB_SPI_RX_EMPTY);
+			tmp = readb(base + WB_SPI_DATA);
+			if(rxd)
+				*(rxd++) = tmp;
+		}
+		len -= tgt_len;
 	}
 
 	if (flags & SPI_XFER_END)
 		spi_cs_deactivate(slave);
 
-	return(0);
+	return 0;
 }
