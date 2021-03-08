@@ -61,6 +61,8 @@
 	"initrd_addr=1000000\0" \
 	"uboot_off=80000\0" \
 	"uboot_size=40000\0" \
+	"sd_args=root=/dev/mmcblk0p2 rw rootwait console=ttyS0\0" \
+	"sdboot=ext4load mmc 0:1 $kernel_addr linux.u && setenv bootargs \"$sd_args\" && boot68 $kernel_addr\0" \
 	"net_args=root=/dev/ram0 console=ttyS0\0" \
 	"netboot=dhcp $kernel_addr /linux.u && dhcp $initrd_addr /rootfs.u && setenv bootargs \"$net_args\" && boot68 $kernel_addr $initrd_addr\0" \
 	"update=mw.b $kernel_addr ff $uboot_size && " \
