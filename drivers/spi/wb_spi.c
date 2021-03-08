@@ -7,13 +7,15 @@
 #define SPI1_BASE	0xCC000000
 #define SPI2_BASE	0xD0000000
 
-#define WB_SPI_DATA	0x0
-#define WB_SPI_STATUS	0x4
+#define WB_SPI_DATA_WR		0x0
+#define WB_SPI_DATA_RD		0x0
+#define WB_SPI_DATA_RD_B	0x3
+#define WB_SPI_STATUS		0x4
 
-#define WB_SPI_SS	0x1
-#define WB_SPI_RX_EMPTY	0x2
-#define WB_SPI_TX_FULL	0x04
-#define WB_SPI_FIFO_DEPTH 1024
+#define WB_SPI_SS		0x1
+#define WB_SPI_RX_EMPTY		0x2
+#define WB_SPI_TX_FULL		0x4
+#define WB_SPI_FIFO_DEPTH	1024
 
 struct wb_spi {
 	struct spi_slave slave;
@@ -106,7 +108,6 @@ int spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 	void *base = ss->base;
 	const u8 *txd = dout;
 	u8 *rxd = din;
-	u8 tmp = 0xff;
 	u32 len;
 	u16 i;
 
@@ -118,14 +119,14 @@ int spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 
 	for(len = bitlen / 8; len > 0;) {
 		const u16 tgt_len = (len > WB_SPI_FIFO_DEPTH) ? WB_SPI_FIFO_DEPTH : len;
-		u8 tmp = 0;
+		u8 tmp = 0xff;
 		for(i = 0; i < tgt_len; i++) {
 			tmp = txd ? *(txd++) : tmp;
-			writeb(tmp, base + WB_SPI_DATA);
+			writeb(tmp, base + WB_SPI_DATA_WR);
 		}
 		for(i = 0; i < tgt_len; i++) {
 			while(readb(base + WB_SPI_STATUS) & WB_SPI_RX_EMPTY);
-			tmp = readb(base + WB_SPI_DATA);
+			tmp = readb(base + WB_SPI_DATA_RD_B);
 			if(rxd)
 				*(rxd++) = tmp;
 		}
