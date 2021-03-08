@@ -49,7 +49,7 @@ void icache_enable(void)
 #else
 	ulong cacr;
 	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
-	cacr |= 0x0001;
+	cacr |= 0x8000;
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
 #endif
 }
@@ -77,7 +77,7 @@ void icache_disable(void)
 #else
 	ulong cacr;
 	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
-	cacr &= ~0x0001;
+	cacr &= ~0x8000;
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
 
 	icache_invalid();
@@ -95,10 +95,7 @@ void icache_invalid(void)
 
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(temp));
 #else
-	ulong cacr;
-	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
-	cacr |= 0x0008;
-	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
+	__asm__ __volatile__("nop\n\t" "cinva %ic\n\t" "nop\n\t");
 #endif
 }
 
@@ -125,7 +122,7 @@ void dcache_enable(void)
 #else
 	ulong cacr;
 	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
-	cacr |= 0x0100;
+	cacr |= 0x80000000;
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
 #endif
 }
@@ -151,7 +148,7 @@ void dcache_disable(void)
 #else
 	ulong cacr;
 	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
-	cacr &= ~0x0100;
+	cacr &= ~0x80000000;
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
 	dcache_invalid();
 #endif
@@ -172,10 +169,7 @@ void dcache_invalid(void)
 	__asm__ __volatile__("movec %0, %%cacr"::"r"(temp));
 #endif
 #else
-	ulong cacr;
-	__asm__ __volatile__("movec %%cacr, %0": "=r"(cacr));
-	cacr |= 0x0800;
-	__asm__ __volatile__("movec %0, %%cacr"::"r"(cacr));
+	__asm__ __volatile__("nop\n\t" "cinva %dc\n\t" "nop\n\t");
 #endif
 }
 

@@ -19,12 +19,18 @@ int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	return 0;
 };
 
+#if defined(CONFIG_MC68040)
+#define CPU_NAME "MC68040"
+#else
+#define CPU_NAME "MC68030"
+#endif
+
 #if defined(CONFIG_DISPLAY_CPUINFO)
 int print_cpuinfo(void)
 {
 	char buf[32];
 
-	printf("CPU:   Motorola MC68030 @ %s MHz\n", strmhz(buf, gd->cpu_clk));
+	printf("CPU:   Motorola %s @ %sMHz\n", CPU_NAME, strmhz(buf, gd->cpu_clk));
 	return 0;
 };
 #endif /* CONFIG_DISPLAY_CPUINFO */

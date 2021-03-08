@@ -15,18 +15,11 @@
 
 #define SAVE_ALL						\
 	move.w	#0x2700,%sr;		/* disable intrs */	\
-	subl	#60,%sp;		/* space for 15 regs */ \
-	moveml	%d0-%d7/%a0-%a6,%sp@;				\
+	moveml	%d0-%d7/%a0-%a6,-(%sp);				\
 
 #define RESTORE_ALL						\
-	moveml	%sp@,%d0-%d7/%a0-%a6;				\
-	addl	#60,%sp;		/* space for 15 regs */ \
+	moveml	(%sp)+,%d0-%d7/%a0-%a6;				\
 	rte
-
-/* If we come from a pre-loader we don't need an initial exception
- * table.
- */
-#if !defined(CONFIG_MONITOR_IS_IN_RAM)
 
 .text
 
@@ -36,9 +29,7 @@
  */
 _vectors:
 .long	0x00000000		/* Flash offset is 0 until we setup CS0 */
-#if (defined(CONFIG_M5282) && (CONFIG_SYS_TEXT_BASE == CONFIG_SYS_INT_FLASH_BASE))
-.long	_start - CONFIG_SYS_TEXT_BASE
-#elif (defined(CONFIG_ATX030))
+#if (defined(CONFIG_ATX030))
 .long	(_start - CONFIG_SYS_TEXT_BASE) + CONFIG_SYS_FLASH_BASE
 #else
 .long	_START
@@ -80,10 +71,6 @@ _vectors:
 .long	_FAULT, _FAULT, _FAULT, _FAULT, _FAULT, _FAULT, _FAULT, _FAULT
 .long	_FAULT, _FAULT, _FAULT, _FAULT, _FAULT, _FAULT, _FAULT, _FAULT
 
-#endif
-
-.text
-
 .globl _start
 _start:
 	nop
@@ -103,16 +90,6 @@ _start:
 	jmp.l (%a0)
 2:
 
-#endif
-	/*
-	 * if we come from a pre-loader we have no exception table and
-	 * therefore no VBR to set
-	 */
-#if !defined(CONFIG_MONITOR_IS_IN_RAM)
-	/*
-	move.l	#CONFIG_SYS_FLASH_BASE, %d0
-	movec	%d0, %VBR
-	*/
 #endif
 
 	/* initialize general use internal ram */
@@ -145,15 +122,6 @@ _start:
 	/* transparent translation */
 	move.l #0xC03FC040, %d0
 	movec.l %d0, %dtt0
-	movec.l %d0, %itt0
-
-	/* enable cache */
-	nop
-	cinva %bc
-	nop
-
-	move.l #0x80008000, %d0
-	movec.l %d0, %cacr
 
 #endif
 
@@ -263,10 +231,7 @@ clear_bss:
 	/* set parameters for board_init_r */
 	move.l	%a0,-(%sp)		/* dest_addr */
 	move.l	%d0,-(%sp)		/* gd */
-#if defined(DEBUG) && (CONFIG_SYS_TEXT_BASE != CONFIG_SYS_INT_FLASH_BASE) && \
-    defined(CONFIG_SYS_HALT_BEFOR_RAM_JUMP)
-	halt
-#endif
+
 	jsr	(%a1)
 
 /******************************************************************************/
@@ -279,17 +244,17 @@ _fault:
 .globl _exc_handler
 _exc_handler:
 	SAVE_ALL
-	movel	%sp,%sp@-
+	move.l	%sp,-(%sp)
 	bsr	exc_handler
-	addql	#4,%sp
+	addq.l	#4,%sp
 	RESTORE_ALL
 
 .globl _int_handler
 _int_handler:
 	SAVE_ALL
-	movel	%sp,%sp@-
+	move.l	%sp,-(%sp)
 	bsr	int_handler
-	addql	#4,%sp
+	addq.l	#4,%sp
 	RESTORE_ALL
 
 /******************************************************************************/
