@@ -108,6 +108,7 @@ int spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 	void *base = ss->base;
 	const u8 *txd = dout;
 	u8 *rxd = din;
+	u8 leftover;
 	u32 len;
 	u16 i;
 
@@ -117,20 +118,37 @@ int spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 	if (flags & SPI_XFER_BEGIN)
 		spi_cs_activate(slave);
 
-	for(len = bitlen / 8; len > 0;) {
+	len = bitlen / 8;
+
+	leftover = len % 4;
+
+	for(len = (len - leftover) / 4; len > 0;) {
 		const u16 tgt_len = (len > WB_SPI_FIFO_DEPTH) ? WB_SPI_FIFO_DEPTH : len;
-		u8 tmp = 0xff;
+		u32 tmp = 0xffffffff;
 		for(i = 0; i < tgt_len; i++) {
-			tmp = txd ? *(txd++) : tmp;
-			writeb(tmp, base + WB_SPI_DATA_WR);
+			tmp = txd ? *((u32*)txd) : tmp;
+			__raw_writel(tmp, base + WB_SPI_DATA_WR);
+			if(txd)
+				txd += 4;
 		}
 		for(i = 0; i < tgt_len; i++) {
 			while(readb(base + WB_SPI_STATUS) & WB_SPI_RX_EMPTY);
-			tmp = readb(base + WB_SPI_DATA_RD_B);
-			if(rxd)
-				*(rxd++) = tmp;
+			tmp = __raw_readl(base + WB_SPI_DATA_RD);
+			if(rxd) {
+				*((u32*)rxd) = tmp;
+				rxd += 4;
+			}
 		}
 		len -= tgt_len;
+	}
+
+	for(len = leftover; len > 0; len--) {
+		u8 tmp = txd ? *(txd++) : 0xff;
+		writeb(tmp, base + WB_SPI_DATA_WR);
+		while(readb(base + WB_SPI_STATUS) & WB_SPI_RX_EMPTY);
+		tmp = readb(base + WB_SPI_DATA_RD_B);
+		if(rxd)
+			*(rxd++) = tmp;
 	}
 
 	if (flags & SPI_XFER_END)
