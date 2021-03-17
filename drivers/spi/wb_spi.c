@@ -15,7 +15,7 @@
 #define WB_SPI_SS		0x1
 #define WB_SPI_RX_EMPTY		0x2
 #define WB_SPI_TX_FULL		0x4
-#define WB_SPI_FIFO_DEPTH	1024
+#define WB_SPI_FIFO_DEPTH	16
 
 struct wb_spi {
 	struct spi_slave slave;
