@@ -3,9 +3,9 @@
 #include <malloc.h>
 #include <asm/io.h>
 
-#define SPI0_BASE	0xC4000000
-#define SPI1_BASE	0xCC000000
-#define SPI2_BASE	0xD0000000
+#define SPI0_BASE	0xF2000000
+#define SPI1_BASE	0xF4000000
+#define SPI2_BASE	0xF5000000
 
 #define WB_SPI_DATA_WR		0x0
 #define WB_SPI_DATA_RD		0x0

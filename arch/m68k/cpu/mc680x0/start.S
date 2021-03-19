@@ -120,7 +120,7 @@ _start:
 #else
 
 	/* transparent translation */
-	move.l #0xC03FC040, %d0
+	move.l #0xF00FC040, %d0
 	movec.l %d0, %dtt0
 
 #endif
